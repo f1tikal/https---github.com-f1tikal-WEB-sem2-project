@@ -466,62 +466,71 @@ unset($_SESSION['auth_error']);
 </div>
 
 <script>
-    // JavaScript для отправки через fetch (задание 8)
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('anketa-form');
-        if (!form) return;
-        const isAuthenticated = <?= json_encode($is_authenticated) ?>;
-        const userId = <?= json_encode($current_user_id) ?>;
-        form.addEventListener('submit', async function(e) {
-            if (window.fetch) e.preventDefault();
-            else return;
-            const formData = new FormData(form);
-            let data = {};
-            for (let [key, value] of formData.entries()) {
-                if (key.endsWith('[]')) {
-                    key = key.slice(0, -2);
-                    if (!data[key]) data[key] = [];
-                    data[key].push(value);
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('anketa-form');
+    if (!form) return;
+    const isAuthenticated = <?= json_encode($is_authenticated) ?>;
+    const userId = <?= json_encode($current_user_id) ?>;
+    form.addEventListener('submit', async function(e) {
+        if (window.fetch) e.preventDefault();
+        else return;
+        
+        const formData = new FormData(form);
+        let data = {};
+        for (let [key, value] of formData.entries()) {
+            if (key.endsWith('[]')) {
+                key = key.slice(0, -2);
+                if (!data[key]) data[key] = [];
+                data[key].push(value);
+            } else {
+                data[key] = value;
+            }
+        }
+        
+        let method = 'POST';
+        let url = 'api.php/application';
+        if (isAuthenticated && userId) {
+            method = 'PUT';
+            url = `api.php/application/${userId}`;
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error('Сервер вернул не JSON: ' + text.substring(0, 100));
+            }
+            
+            const result = await response.json();
+            if (response.ok) {
+                if (method === 'POST' && result.login) {
+                    alert(`Анкета сохранена!\nЛогин: ${result.login}\nПароль: ${result.password}\nСсылка: ${result.profile_url}`);
                 } else {
-                    data[key] = value;
+                    alert('Данные обновлены!');
                 }
-            }
-            let method = 'POST';
-            let url = '/task3/api.php/application';
-            if (isAuthenticated && userId) {
-                method = 'PUT';
-                url = `/task3/api.php/application/${userId}`;
-            }
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    if (method === 'POST' && result.login) {
-                        alert(`Анкета сохранена!\nЛогин: ${result.login}\nПароль: ${result.password}\nСсылка: ${result.profile_url}`);
-                    } else {
-                        alert('Данные обновлены!');
+                window.location.reload();
+            } else {
+                let errorMsg = 'Ошибка:\n';
+                if (result.errors) {
+                    for (let field in result.errors) {
+                        errorMsg += `${field}: ${result.errors[field]}\n`;
                     }
-                    window.location.reload();
                 } else {
-                    let errorMsg = 'Ошибка:\n';
-                    if (result.errors) {
-                        for (let field in result.errors) {
-                            errorMsg += `${field}: ${result.errors[field]}\n`;
-                        }
-                    } else {
-                        errorMsg += result.error || 'Неизвестная ошибка';
-                    }
-                    alert(errorMsg);
+                    errorMsg += result.error || 'Неизвестная ошибка';
                 }
-            } catch (err) {
-                alert('Ошибка сети: ' + err.message);
+                alert(errorMsg);
             }
-        });
+        } catch (err) {
+            alert('Ошибка сети: ' + err.message);
+        }
     });
+});
 </script>
 </body>
 </html>
