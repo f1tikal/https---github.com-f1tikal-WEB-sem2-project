@@ -394,62 +394,116 @@ unset($_SESSION['auth_error']);
 
         <form method="POST" id="anketa-form">
             <input type="hidden" name="save_application" value="1">
-            <!-- поля формы ... (как в предыдущем шаблоне, используйте get_field_value и is_language_selected) -->
-            <div class="form-group">
-                <label for="full_name" class="required">ФИО</label>
-                <input type="text" name="full_name" id="full_name" value="<?= get_field_value('full_name', $input, $defaults) ?>" class="<?= isset($errors['full_name']) ? 'input-error' : '' ?>">
-                <?php if (isset($errors['full_name'])): ?><div class="error-message"><?= htmlspecialchars($errors['full_name']) ?></div><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label for="phone" class="required">Телефон</label>
-                <input type="tel" name="phone" id="phone" value="<?= get_field_value('phone', $input, $defaults) ?>" class="<?= isset($errors['phone']) ? 'input-error' : '' ?>">
-                <?php if (isset($errors['phone'])): ?><div class="error-message"><?= htmlspecialchars($errors['phone']) ?></div><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label for="email" class="required">E-mail</label>
-                <input type="email" name="email" id="email" value="<?= get_field_value('email', $input, $defaults) ?>" class="<?= isset($errors['email']) ? 'input-error' : '' ?>">
-                <?php if (isset($errors['email'])): ?><div class="error-message"><?= htmlspecialchars($errors['email']) ?></div><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label for="birth_date" class="required">Дата рождения</label>
-                <input type="date" name="birth_date" id="birth_date" value="<?= get_field_value('birth_date', $input, $defaults) ?>" class="<?= isset($errors['birth_date']) ? 'input-error' : '' ?>">
-                <?php if (isset($errors['birth_date'])): ?><div class="error-message"><?= htmlspecialchars($errors['birth_date']) ?></div><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label class="required">Пол</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="gender" value="male" <?= get_field_value('gender', $input, $defaults) == 'male' ? 'checked' : '' ?>> Мужской</label>
-                    <label><input type="radio" name="gender" value="female" <?= get_field_value('gender', $input, $defaults) == 'female' ? 'checked' : '' ?>> Женский</label>
-                    <label><input type="radio" name="gender" value="other" <?= get_field_value('gender', $input, $defaults) == 'other' ? 'checked' : '' ?>> Другой</label>
-                </div>
-                <?php if (isset($errors['gender'])): ?><div class="error-message"><?= htmlspecialchars($errors['gender']) ?></div><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label for="languages" class="required">Любимые языки программирования (можно несколько)</label>
-                <select name="languages[]" id="languages" multiple size="6" class="<?= isset($errors['languages']) ? 'input-error' : '' ?>">
-                    <?php
-                    $lang_list = [1=>'Pascal',2=>'C',3=>'C++',4=>'JavaScript',5=>'PHP',6=>'Python',7=>'Java',8=>'Haskell',9=>'Clojure',10=>'Prolog',11=>'Scala',12=>'Go'];
-                    foreach ($lang_list as $id => $name):
-                        $selected = is_language_selected($id, $input, $defaults);
-                    ?>
-                        <option value="<?= $id ?>" <?= $selected ? 'selected' : '' ?>><?= $name ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <?php if (isset($errors['languages'])): ?><div class="error-message"><?= htmlspecialchars($errors['languages']) ?></div><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label for="bio" class="required">Биография</label>
-                <textarea name="bio" id="bio" rows="5" class="<?= isset($errors['bio']) ? 'input-error' : '' ?>"><?= get_field_value('bio', $input, $defaults) ?></textarea>
-                <?php if (isset($errors['bio'])): ?><div class="error-message"><?= htmlspecialchars($errors['bio']) ?></div><?php endif; ?>
-            </div>
-            <div class="checkbox-group">
-                <label>
-                    <input type="checkbox" name="agreement" value="1" <?= get_field_value('agreement', $input, $defaults) == 1 ? 'checked' : '' ?>>
-                    Я ознакомлен(а) с контрактом и согласен(на)
-                </label>
-                <?php if (isset($errors['agreement'])): ?><div class="error-message"><?= htmlspecialchars($errors['agreement']) ?></div><?php endif; ?>
-            </div>
-            <button type="submit" class="btn-submit"><?= $is_authenticated ? 'Обновить данные' : 'Сохранить' ?></button>
+
+<!-- ФИО -->
+<div class="form-group">
+    <label for="full_name" class="required">ФИО</label>
+    <input type="text" name="full_name" id="full_name" 
+           value="<?= get_field_value('full_name', $input, $defaults) ?>" 
+           class="<?= isset($errors['full_name']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['full_name'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['full_name']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Телефон -->
+<div class="form-group">
+    <label for="phone" class="required">Телефон</label>
+    <input type="tel" name="phone" id="phone" 
+           value="<?= get_field_value('phone', $input, $defaults) ?>" 
+           class="<?= isset($errors['phone']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['phone'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['phone']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Email -->
+<div class="form-group">
+    <label for="email" class="required">E-mail</label>
+    <input type="email" name="email" id="email" 
+           value="<?= get_field_value('email', $input, $defaults) ?>" 
+           class="<?= isset($errors['email']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['email'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['email']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Дата рождения -->
+<div class="form-group">
+    <label for="birth_date" class="required">Дата рождения</label>
+    <input type="date" name="birth_date" id="birth_date" 
+           value="<?= get_field_value('birth_date', $input, $defaults) ?>" 
+           class="<?= isset($errors['birth_date']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['birth_date'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['birth_date']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Пол (радиокнопки) -->
+<div class="form-group">
+    <label class="required">Пол</label>
+    <div class="radio-group">
+        <label>
+            <input type="radio" name="gender" value="male" <?= get_field_value('gender', $input, $defaults) == 'male' ? 'checked' : '' ?>> Мужской
+        </label>
+        <label>
+            <input type="radio" name="gender" value="female" <?= get_field_value('gender', $input, $defaults) == 'female' ? 'checked' : '' ?>> Женский
+        </label>
+        <label>
+            <input type="radio" name="gender" value="other" <?= get_field_value('gender', $input, $defaults) == 'other' ? 'checked' : '' ?>> Другой
+        </label>
+    </div>
+    <?php if (isset($errors['gender'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['gender']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Любимые языки (множественный выбор) -->
+<div class="form-group">
+    <label for="languages" class="required">Любимые языки программирования</label>
+    <select name="languages[]" id="languages" multiple size="6" 
+            class="<?= isset($errors['languages']) ? 'input-error' : '' ?>">
+        <?php
+        $lang_list = [
+            1 => 'Pascal', 2 => 'C', 3 => 'C++', 4 => 'JavaScript',
+            5 => 'PHP', 6 => 'Python', 7 => 'Java', 8 => 'Haskell',
+            9 => 'Clojure', 10 => 'Prolog', 11 => 'Scala', 12 => 'Go'
+        ];
+        foreach ($lang_list as $id => $name):
+            $selected = is_language_selected($id, $input, $defaults);
+        ?>
+            <option value="<?= $id ?>" <?= $selected ? 'selected' : '' ?>><?= $name ?></option>
+        <?php endforeach; ?>
+    </select>
+    <small>Удерживайте Ctrl (Cmd на Mac) для выбора нескольких</small>
+    <?php if (isset($errors['languages'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['languages']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Биография -->
+<div class="form-group">
+    <label for="bio" class="required">Биография</label>
+    <textarea name="bio" id="bio" rows="5" 
+              class="<?= isset($errors['bio']) ? 'input-error' : '' ?>"><?= get_field_value('bio', $input, $defaults) ?></textarea>
+    <?php if (isset($errors['bio'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['bio']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Чекбокс согласия -->
+<div class="checkbox-group">
+    <label>
+        <input type="checkbox" name="agreement" value="1" <?= get_field_value('agreement', $input, $defaults) == 1 ? 'checked' : '' ?>>
+        Я ознакомлен(а) с контрактом и согласен(на)
+    </label>
+    <?php if (isset($errors['agreement'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['agreement']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Кнопка отправки -->
+<button type="submit" class="btn-submit"><?= $is_authenticated ? 'Обновить данные' : 'Сохранить' ?></button>
         </form>
     </div>
 </div>
