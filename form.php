@@ -232,21 +232,15 @@ unset($_SESSION['auth_error']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Анкета разработчика</title>
+    <title>Анкета разработчика – Drupal Coder Style</title>
     <!-- <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
     <link href="style.css" rel="stylesheet"> -->
     <style>
-        /* Минимальные стили для формы (можно оставить или положиться на style.css) */
-        body {
-            background: #eef2f7;
-            font-family: 'Montserrat', sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
+        /* Аналогично предыдущему – стили для формы, ошибок, сообщений */
         .anketa-container {
             max-width: 900px;
-            margin: 40px auto;
+            margin: 80px auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
@@ -363,110 +357,171 @@ unset($_SESSION['auth_error']);
     </style>
 </head>
 <body>
-<div class="anketa-container">
-    <div class="logout-link">
-        <?php if ($is_authenticated): ?><a href="?logout=1">Выйти</a><?php endif; ?>
+<section class="header-section" style="min-height: auto; padding-bottom: 0;">
+    <div class="container">
+        <header class="site-header">
+            <a href="#" class="logo"><img src="drupal-coder.svg" alt="Drupal Coder Logo"></a>
+            <nav class="main-nav"><ul><li><a href="#">Поддержка сайтов</a></li><li><a href="#">Тарифы</a></li><li><a href="#">Наши работы</a></li><li><a href="#">Отзывы</a></li><li><a href="#">Контакты</a></li></ul></nav>
+            <div class="header-contact"><a href="tel:88002222673" class="phone-number">8 800 222-26-73</a><div class="lang-switcher"><span>RU</span><img src="down-arrow.png" alt="arrow"></div></div>
+        </header>
     </div>
+</section>
 
-    <?php if (!$is_authenticated): ?>
-        <div class="login-form">
-            <h3>Вход для редактирования</h3>
-            <form method="POST">
-                <input type="hidden" name="login_action" value="1">
-                <div class="form-group"><label>Логин: <input type="text" name="login" required></label></div>
-                <div class="form-group"><label>Пароль: <input type="password" name="password" required></label></div>
-                <button type="submit" class="btn-submit" style="width:auto;">Войти</button>
-                <?php if ($auth_error): ?><div class="error-message"><?= htmlspecialchars($auth_error) ?></div><?php endif; ?>
-            </form>
-        </div>
-    <?php endif; ?>
-
-    <?= $success_msg ?>
-
-    <?php if (!empty($errors)): ?>
-        <div class="alert alert-error">❌ При заполнении формы допущены ошибки. Исправьте их и отправьте снова.</div>
-    <?php endif; ?>
-
-    <form method="POST" id="anketa-form">
-        <input type="hidden" name="save_application" value="1">
-
-        <!-- ФИО -->
-        <div class="form-group">
-            <label for="full_name" class="required">ФИО</label>
-            <input type="text" name="full_name" id="full_name" value="<?= get_field_value('full_name', $input, $defaults) ?>" class="<?= isset($errors['full_name']) ? 'input-error' : '' ?>">
-            <?php if (isset($errors['full_name'])): ?><div class="error-message"><?= htmlspecialchars($errors['full_name']) ?></div><?php endif; ?>
+<div class="container">
+    <div class="anketa-container">
+        <div class="logout-link">
+            <?php if ($is_authenticated): ?><a href="?logout=1">Выйти</a><?php endif; ?>
         </div>
 
-        <!-- Телефон -->
-        <div class="form-group">
-            <label for="phone" class="required">Телефон</label>
-            <input type="tel" name="phone" id="phone" value="<?= get_field_value('phone', $input, $defaults) ?>" class="<?= isset($errors['phone']) ? 'input-error' : '' ?>">
-            <?php if (isset($errors['phone'])): ?><div class="error-message"><?= htmlspecialchars($errors['phone']) ?></div><?php endif; ?>
-        </div>
-
-        <!-- Email -->
-        <div class="form-group">
-            <label for="email" class="required">E-mail</label>
-            <input type="email" name="email" id="email" value="<?= get_field_value('email', $input, $defaults) ?>" class="<?= isset($errors['email']) ? 'input-error' : '' ?>">
-            <?php if (isset($errors['email'])): ?><div class="error-message"><?= htmlspecialchars($errors['email']) ?></div><?php endif; ?>
-        </div>
-
-        <!-- Дата рождения -->
-        <div class="form-group">
-            <label for="birth_date" class="required">Дата рождения</label>
-            <input type="date" name="birth_date" id="birth_date" value="<?= get_field_value('birth_date', $input, $defaults) ?>" class="<?= isset($errors['birth_date']) ? 'input-error' : '' ?>">
-            <?php if (isset($errors['birth_date'])): ?><div class="error-message"><?= htmlspecialchars($errors['birth_date']) ?></div><?php endif; ?>
-        </div>
-
-        <!-- Пол -->
-        <div class="form-group">
-            <label class="required">Пол</label>
-            <div class="radio-group">
-                <label><input type="radio" name="gender" value="male" <?= get_field_value('gender', $input, $defaults) == 'male' ? 'checked' : '' ?>> Мужской</label>
-                <label><input type="radio" name="gender" value="female" <?= get_field_value('gender', $input, $defaults) == 'female' ? 'checked' : '' ?>> Женский</label>
-                <label><input type="radio" name="gender" value="other" <?= get_field_value('gender', $input, $defaults) == 'other' ? 'checked' : '' ?>> Другой</label>
+        <?php if (!$is_authenticated): ?>
+            <div class="login-form">
+                <h3>Вход для редактирования</h3>
+                <form method="POST">
+                    <input type="hidden" name="login_action" value="1">
+                    <div class="form-group"><label>Логин: <input type="text" name="login" required style="width:auto;"></label></div>
+                    <div class="form-group"><label>Пароль: <input type="password" name="password" required style="width:auto;"></label></div>
+                    <button type="submit" class="btn btn-primary" style="width:auto;">Войти</button>
+                    <?php if ($auth_error): ?><div class="error-message"><?= htmlspecialchars($auth_error) ?></div><?php endif; ?>
+                </form>
             </div>
-            <?php if (isset($errors['gender'])): ?><div class="error-message"><?= htmlspecialchars($errors['gender']) ?></div><?php endif; ?>
-        </div>
+        <?php endif; ?>
 
-        <!-- Любимые языки программирования -->
-        <div class="form-group">
-            <label for="languages" class="required">Любимые языки программирования</label>
-            <select name="languages[]" id="languages" multiple size="6" class="<?= isset($errors['languages']) ? 'input-error' : '' ?>">
-                <?php
-                $lang_list = [1=>'Pascal',2=>'C',3=>'C++',4=>'JavaScript',5=>'PHP',6=>'Python',7=>'Java',8=>'Haskell',9=>'Clojure',10=>'Prolog',11=>'Scala',12=>'Go'];
-                foreach ($lang_list as $id => $name):
-                    $selected = is_language_selected($id, $input, $defaults);
-                ?>
-                    <option value="<?= $id ?>" <?= $selected ? 'selected' : '' ?>><?= $name ?></option>
-                <?php endforeach; ?>
-            </select>
-            <small>Удерживайте Ctrl (Cmd на Mac) для выбора нескольких</small>
-            <?php if (isset($errors['languages'])): ?><div class="error-message"><?= htmlspecialchars($errors['languages']) ?></div><?php endif; ?>
-        </div>
+        <?= $success_msg ?>
 
-        <!-- Биография -->
-        <div class="form-group">
-            <label for="bio" class="required">Биография</label>
-            <textarea name="bio" id="bio" rows="5" class="<?= isset($errors['bio']) ? 'input-error' : '' ?>"><?= get_field_value('bio', $input, $defaults) ?></textarea>
-            <?php if (isset($errors['bio'])): ?><div class="error-message"><?= htmlspecialchars($errors['bio']) ?></div><?php endif; ?>
-        </div>
+        <?php if (!empty($errors)): ?>
+            <div class="alert alert-error">❌ При заполнении формы допущены ошибки. Исправьте их и отправьте снова.</div>
+        <?php endif; ?>
 
-        <!-- Согласие -->
-        <div class="checkbox-group">
-            <label>
-                <input type="checkbox" name="agreement" value="1" <?= get_field_value('agreement', $input, $defaults) == 1 ? 'checked' : '' ?>>
-                Я ознакомлен(а) с контрактом и согласен(на)
-            </label>
-            <?php if (isset($errors['agreement'])): ?><div class="error-message"><?= htmlspecialchars($errors['agreement']) ?></div><?php endif; ?>
-        </div>
+        <form method="POST" id="anketa-form">
+            <input type="hidden" name="save_application" value="1">
 
-        <button type="submit" class="btn-submit"><?= $is_authenticated ? 'Обновить данные' : 'Сохранить' ?></button>
-    </form>
+<!-- ФИО -->
+<div class="form-group">
+    <label for="full_name" class="required">ФИО</label>
+    <input type="text" name="full_name" id="full_name" 
+           value="<?= get_field_value('full_name', $input, $defaults) ?>" 
+           class="<?= isset($errors['full_name']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['full_name'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['full_name']) ?></div>
+    <?php endif; ?>
 </div>
 
+<!-- Телефон -->
+<div class="form-group">
+    <label for="phone" class="required">Телефон</label>
+    <input type="tel" name="phone" id="phone" 
+           value="<?= get_field_value('phone', $input, $defaults) ?>" 
+           class="<?= isset($errors['phone']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['phone'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['phone']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Email -->
+<div class="form-group">
+    <label for="email" class="required">E-mail</label>
+    <input type="email" name="email" id="email" 
+           value="<?= get_field_value('email', $input, $defaults) ?>" 
+           class="<?= isset($errors['email']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['email'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['email']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Дата рождения -->
+<div class="form-group">
+    <label for="birth_date" class="required">Дата рождения</label>
+    <input type="date" name="birth_date" id="birth_date" 
+           value="<?= get_field_value('birth_date', $input, $defaults) ?>" 
+           class="<?= isset($errors['birth_date']) ? 'input-error' : '' ?>">
+    <?php if (isset($errors['birth_date'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['birth_date']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Пол (радиокнопки) -->
+<div class="form-group">
+    <label class="required">Пол</label>
+    <div class="radio-group">
+        <label>
+            <input type="radio" name="gender" value="male" <?= get_field_value('gender', $input, $defaults) == 'male' ? 'checked' : '' ?>> Мужской
+        </label>
+        <label>
+            <input type="radio" name="gender" value="female" <?= get_field_value('gender', $input, $defaults) == 'female' ? 'checked' : '' ?>> Женский
+        </label>
+        <label>
+            <input type="radio" name="gender" value="other" <?= get_field_value('gender', $input, $defaults) == 'other' ? 'checked' : '' ?>> Другой
+        </label>
+    </div>
+    <?php if (isset($errors['gender'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['gender']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Любимые языки (множественный выбор) -->
+<div class="form-group">
+    <label for="languages" class="required">Любимые языки программирования</label>
+    <select name="languages[]" id="languages" multiple size="6" 
+            class="<?= isset($errors['languages']) ? 'input-error' : '' ?>">
+        <?php
+        $lang_list = [
+            1 => 'Pascal', 2 => 'C', 3 => 'C++', 4 => 'JavaScript',
+            5 => 'PHP', 6 => 'Python', 7 => 'Java', 8 => 'Haskell',
+            9 => 'Clojure', 10 => 'Prolog', 11 => 'Scala', 12 => 'Go'
+        ];
+        foreach ($lang_list as $id => $name):
+            $selected = is_language_selected($id, $input, $defaults);
+        ?>
+            <option value="<?= $id ?>" <?= $selected ? 'selected' : '' ?>><?= $name ?></option>
+        <?php endforeach; ?>
+    </select>
+    <small>Удерживайте Ctrl (Cmd на Mac) для выбора нескольких</small>
+    <?php if (isset($errors['languages'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['languages']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Биография -->
+<div class="form-group">
+    <label for="bio" class="required">Биография</label>
+    <textarea name="bio" id="bio" rows="5" 
+              class="<?= isset($errors['bio']) ? 'input-error' : '' ?>"><?= get_field_value('bio', $input, $defaults) ?></textarea>
+    <?php if (isset($errors['bio'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['bio']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Чекбокс согласия -->
+<div class="checkbox-group">
+    <label>
+        <input type="checkbox" name="agreement" value="1" <?= get_field_value('agreement', $input, $defaults) == 1 ? 'checked' : '' ?>>
+        Я ознакомлен(а) с контрактом и согласен(на)
+    </label>
+    <?php if (isset($errors['agreement'])): ?>
+        <div class="error-message"><?= htmlspecialchars($errors['agreement']) ?></div>
+    <?php endif; ?>
+</div>
+
+<!-- Кнопка отправки -->
+<button type="submit" class="btn-submit"><?= $is_authenticated ? 'Обновить данные' : 'Сохранить' ?></button>
+        </form>
+    </div>
+</div>
+
+<footer class="footer-section" style="margin-top: 60px;">
+    <div class="container">
+        <div class="footer-bottom">
+            <hr class="footer-divider">
+            <div class="footer-copyright">
+                <p>Проект ООО «Инитлаб», Краснодар, Россия.</p>
+                <p>Drupal является зарегистрированной торговой маркой Dries Buytaert.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
 <script>
-    // JavaScript для отправки через fetch (задание 8)
+    
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('anketa-form');
         if (!form) return;
