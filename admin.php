@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_action'])) {
     $login = $_POST['login'] ?? '';
     $password = $_POST['password'] ?? '';
     $pdo = getDB();
-    $stmt = $pdo->prepare("SELECT id, password_hash FROM admin_users WHERE login = ?");
+    $stmt = $pdo->prepare("SELECT id, password_hash FROM vinokurov_admin_users WHERE login = ?");
     $stmt->execute([$login]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($admin && password_verify($password, $admin['password_hash'])) {
@@ -73,11 +73,11 @@ if ($action === 'delete' && $id) {
 // Редактирование (загрузка данных)
 $edit_user = null;
 if ($action === 'edit' && $id) {
-    $stmt = $pdo->prepare("SELECT * FROM my_applications WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM vinokurov_applications WHERE id = ?");
     $stmt->execute([$id]);
     $edit_user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($edit_user) {
-        $stmtLang = $pdo->prepare("SELECT language_id FROM my_application_languages WHERE application_id = ?");
+        $stmtLang = $pdo->prepare("SELECT language_id FROM vinokurov_application_languages WHERE application_id = ?");
         $stmtLang->execute([$id]);
         $edit_user['languages'] = $stmtLang->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
     if (validateApplicationData($input, $errors)) {
         try {
             $pdo->beginTransaction();
-            $sql = "UPDATE my_applications SET 
+            $sql = "UPDATE vinokurov_applications SET 
                     full_name = ?, phone = ?, email = ?, birth_date = ?, gender = ?, bio = ?, agreement = ?
                     WHERE id = ?";
             $stmt = $pdo->prepare($sql);
@@ -108,8 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
                 $input['birth_date'], $input['gender'], $input['bio'],
                 $input['agreement'], $id
             ]);
-            $pdo->prepare("DELETE FROM my_application_languages WHERE application_id = ?")->execute([$id]);
-            $stmtLang = $pdo->prepare("INSERT INTO my_application_languages (application_id, language_id) VALUES (?, ?)");
+            $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
+            $stmtLang = $pdo->prepare("INSERT INTO vinokurov_application_languages (application_id, language_id) VALUES (?, ?)");
             foreach ($input['languages'] as $lang_id) {
                 $stmtLang->execute([$id, $lang_id]);
             }
@@ -129,11 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
 }
 
 // Получение списка анкет и статистики
-$applications = $pdo->query("SELECT * FROM my_applications ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+$applications = $pdo->query("SELECT * FROM vinokurov_applications ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 $lang_stats = $pdo->query("
     SELECT pl.language_name, COUNT(lal.application_id) as count
-    FROM my_programming_languages pl
-    LEFT JOIN my_application_languages lal ON pl.language_id = lal.language_id
+    FROM vinokurov_programming_languages pl
+    LEFT JOIN vinokurov_application_languages lal ON pl.language_id = lal.language_id
     GROUP BY pl.language_id
     ORDER BY count DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -171,7 +171,7 @@ if (isset($_GET['message']) && $_GET['message'] === 'updated') {
     <div class="logout-link">
         <a href="?logout=1" class="btn btn-danger">Выйти</a>
     </div>
-    <h1>👑 Панель администратора</h1>
+    <h1> Панель администратора</h1>
     <?php if ($message): ?>
         <div class="alert"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
