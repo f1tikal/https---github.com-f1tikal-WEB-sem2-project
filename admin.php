@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_action'])) {
     }
 }
 
-// Если не авторизован – показываем форму входа
+
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     ?>
     <!DOCTYPE html>
@@ -50,13 +50,13 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-// ----- Администратор авторизован – показываем панель -----
+
 $pdo = getDB();
 $message = '';
 $action = $_GET['action'] ?? '';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// Удаление
+
 if ($action === 'delete' && $id) {
     try {
         $pdo->beginTransaction();
@@ -70,7 +70,7 @@ if ($action === 'delete' && $id) {
     }
 }
 
-// Редактирование (загрузка данных)
+
 $edit_user = null;
 if ($action === 'edit' && $id) {
     $stmt = $pdo->prepare("SELECT * FROM vinokurov_applications WHERE id = ?");
