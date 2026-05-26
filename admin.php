@@ -17,7 +17,7 @@ if (empty($auth_login) || empty($auth_pass)) {
 }
 
 $pdo = getDB();
-$stmt = $pdo->prepare("SELECT password_hash FROM admin_users WHERE login = ?");
+$stmt = $pdo->prepare("SELECT password_hash FROM vinokurov_admin_users WHERE login = ?");
 $stmt->execute([$auth_login]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -37,8 +37,8 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($action === 'delete' && $id) {
     try {
         $pdo->beginTransaction();
-        $pdo->prepare("DELETE FROM my_application_languages WHERE application_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM my_applications WHERE id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vinokurov_applications WHERE id = ?")->execute([$id]);
         $pdo->commit();
         $message = "Анкета #$id удалена.";
     } catch (Exception $e) {
@@ -51,11 +51,11 @@ if ($action === 'delete' && $id) {
 $edit_user = null;
 if ($action === 'edit' && $id) {
     // Загружаем текущие данные
-    $stmt = $pdo->prepare("SELECT * FROM my_applications WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM vinokurov_applications WHERE id = ?");
     $stmt->execute([$id]);
     $edit_user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($edit_user) {
-        $stmtLang = $pdo->prepare("SELECT language_id FROM my_application_languages WHERE application_id = ?");
+        $stmtLang = $pdo->prepare("SELECT language_id FROM vinokurov_application_languages WHERE application_id = ?");
         $stmtLang->execute([$id]);
         $edit_user['languages'] = $stmtLang->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
         try {
             $pdo->beginTransaction();
             // Обновление основной таблицы
-            $sql = "UPDATE my_applications SET 
+            $sql = "UPDATE vinokurov_applications SET 
                     full_name = ?, phone = ?, email = ?, birth_date = ?, gender = ?, bio = ?, agreement = ?
                     WHERE id = ?";
             $stmt = $pdo->prepare($sql);
@@ -88,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
                 $input['agreement'], $id
             ]);
             // Обновление языков
-            $pdo->prepare("DELETE FROM my_application_languages WHERE application_id = ?")->execute([$id]);
-            $stmtLang = $pdo->prepare("INSERT INTO my_application_languages (application_id, language_id) VALUES (?, ?)");
+            $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
+            $stmtLang = $pdo->prepare("INSERT INTO vinokurov_application_languages (application_id, language_id) VALUES (?, ?)");
             foreach ($input['languages'] as $lang_id) {
                 $stmtLang->execute([$id, $lang_id]);
             }
@@ -112,13 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
 }
 
 // Получение всех анкет (для списка)
-$applications = $pdo->query("SELECT * FROM my_applications ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+$applications = $pdo->query("SELECT * FROM vinokurov_applications ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 
 // Статистика по языкам
 $lang_stats = $pdo->query("
     SELECT pl.language_name, COUNT(lal.application_id) as count
-    FROM my_programming_languages pl
-    LEFT JOIN my_application_languages lal ON pl.language_id = lal.language_id
+    FROM vinokurov_programming_languages pl
+    LEFT JOIN vinokurov_application_languages lal ON pl.language_id = lal.language_id
     GROUP BY pl.language_id
     ORDER BY count DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -154,7 +154,7 @@ if (isset($_GET['message']) && $_GET['message'] === 'updated') {
 </head>
 <body>
 <div class="container">
-    <h1>👑 Панель администратора</h1>
+    <h1> Панель администратора</h1>
     <?php if ($message): ?>
         <div class="alert"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
@@ -181,8 +181,8 @@ if (isset($_GET['message']) && $_GET['message'] === 'updated') {
                 <td><?= htmlspecialchars($app['phone']) ?></td>
                 <td><?= htmlspecialchars($app['email']) ?></td>
                 <td>
-                    <a href="?action=edit&id=<?= $app['id'] ?>" class="btn btn-warning">✏️ Редактировать</a>
-                    <a href="?action=delete&id=<?= $app['id'] ?>" class="btn btn-danger" onclick="return confirm('Удалить анкету?')">🗑️ Удалить</a>
+                    <a href="?action=edit&id=<?= $app['id'] ?>" class="btn btn-warning"> Редактировать</a>
+                    <a href="?action=delete&id=<?= $app['id'] ?>" class="btn btn-danger" onclick="return confirm('Удалить анкету?')"> Удалить</a>
                  </td>
             </tr>
             <?php endforeach; ?>
