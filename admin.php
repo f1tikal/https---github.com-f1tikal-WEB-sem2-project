@@ -56,8 +56,8 @@ $message = '';
 $action = $_GET['action'] ?? '';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-
-if ($action === 'delete' && $id) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $id = (int)$_POST['delete_id'];
     try {
         $pdo->beginTransaction();
         $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
@@ -68,7 +68,22 @@ if ($action === 'delete' && $id) {
         $pdo->rollBack();
         $message = "Ошибка удаления: " . $e->getMessage();
     }
+    header("Location: admin.php");
+    exit;
 }
+
+// if ($action === 'delete' && $id) {
+//     try {
+//         $pdo->beginTransaction();
+//         $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
+//         $pdo->prepare("DELETE FROM vinokurov_applications WHERE id = ?")->execute([$id]);
+//         $pdo->commit();
+//         $message = "Анкета #$id удалена.";
+//     } catch (Exception $e) {
+//         $pdo->rollBack();
+//         $message = "Ошибка удаления: " . $e->getMessage();
+//     }
+// }
 
 
 $edit_user = null;
@@ -199,7 +214,10 @@ if (isset($_GET['message']) && $_GET['message'] === 'updated') {
                 <td><?= htmlspecialchars($app['email']) ?></td>
                 <td>
                     <a href="?action=edit&id=<?= $app['id'] ?>" class="btn btn-warning">✏️ Редактировать</a>
-                    <a href="?action=delete&id=<?= $app['id'] ?>" class="btn btn-danger" onclick="return confirm('Удалить анкету?')">🗑️ Удалить</a>
+                    <form method="POST" style= "display: inline;" onsubmit= "return confirm('Удалить анкету?');">
+                        <input type="hidden" name = "delete_id" value="<?= $app['id'] ?>">
+                        <button type="submit" class="btn btn-danger"> Delete </button>
+                    </form>
                 </td>
             </tr>
             <?php endforeach; ?>
