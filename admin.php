@@ -60,8 +60,8 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($action === 'delete' && $id) {
     try {
         $pdo->beginTransaction();
-        $pdo->prepare("DELETE FROM my_application_languages WHERE application_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM my_applications WHERE id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vinokurov_applications WHERE id = ?")->execute([$id]);
         $pdo->commit();
         $message = "Анкета #$id удалена.";
     } catch (Exception $e) {
