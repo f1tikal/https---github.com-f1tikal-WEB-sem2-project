@@ -1,34 +1,57 @@
 <?php
-// admin.php – панель администратора (задание 6)
+// admin.php – панель администратора (с сессионной авторизацией)
 require_once 'db.php';
 require_once 'validation.php';
-
 session_start();
 
-// ----- HTTP Basic Auth -----
-$auth_login = $_SERVER['PHP_AUTH_USER'] ?? '';
-$auth_pass = $_SERVER['PHP_AUTH_PW'] ?? '';
-
-if (empty($auth_login) || empty($auth_pass)) {
-    header('WWW-Authenticate: Basic realm="Admin Area"');
-    header('HTTP/1.0 401 Unauthorized');
-    echo 'Доступ запрещён. Введите логин и пароль.';
+// ----- Логика входа и выхода -----
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: admin.php');
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_action'])) {
+    $login = $_POST['login'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $pdo = getDB();
+    $stmt = $pdo->prepare("SELECT id, password_hash FROM admin_users WHERE login = ?");
+    $stmt->execute([$login]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($admin && password_verify($password, $admin['password_hash'])) {
+        $_SESSION['admin_logged_in'] = true;
+        header('Location: admin.php');
+        exit;
+    } else {
+        $auth_error = 'Неверный логин или пароль администратора.';
+    }
+}
+
+// Если не авторизован – показываем форму входа
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>Вход администратора</title>
+    <style>body{font-family:Arial;padding:40px}form{max-width:300px;margin:0 auto}</style>
+    </head>
+    <body>
+        <form method="POST">
+            <h2>Вход в панель администратора</h2>
+            <input type="hidden" name="login_action" value="1">
+            <p><label>Логин: <input type="text" name="login" required></label></p>
+            <p><label>Пароль: <input type="password" name="password" required></label></p>
+            <button type="submit">Войти</button>
+            <?php if (isset($auth_error)) echo "<p style='color:red'>$auth_error</p>"; ?>
+        </form>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
+// ----- Администратор авторизован – показываем панель -----
 $pdo = getDB();
-$stmt = $pdo->prepare("SELECT password_hash FROM vinokurov_admin_users WHERE login = ?");
-$stmt->execute([$auth_login]);
-$admin = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$admin || !password_verify($auth_pass, $admin['password_hash'])) {
-    header('WWW-Authenticate: Basic realm="Admin Area"');
-    header('HTTP/1.0 401 Unauthorized');
-    echo 'Неверный логин или пароль.';
-    exit;
-}
-
-// ----- Обработка действий -----
 $message = '';
 $action = $_GET['action'] ?? '';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -37,8 +60,8 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($action === 'delete' && $id) {
     try {
         $pdo->beginTransaction();
-        $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM vinokurov_applications WHERE id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM my_application_languages WHERE application_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM my_applications WHERE id = ?")->execute([$id]);
         $pdo->commit();
         $message = "Анкета #$id удалена.";
     } catch (Exception $e) {
@@ -47,15 +70,14 @@ if ($action === 'delete' && $id) {
     }
 }
 
-// Редактирование (POST)
+// Редактирование (загрузка данных)
 $edit_user = null;
 if ($action === 'edit' && $id) {
-    // Загружаем текущие данные
-    $stmt = $pdo->prepare("SELECT * FROM vinokurov_applications WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM my_applications WHERE id = ?");
     $stmt->execute([$id]);
     $edit_user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($edit_user) {
-        $stmtLang = $pdo->prepare("SELECT language_id FROM vinokurov_application_languages WHERE application_id = ?");
+        $stmtLang = $pdo->prepare("SELECT language_id FROM my_application_languages WHERE application_id = ?");
         $stmtLang->execute([$id]);
         $edit_user['languages'] = $stmtLang->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -77,8 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
     if (validateApplicationData($input, $errors)) {
         try {
             $pdo->beginTransaction();
-            // Обновление основной таблицы
-            $sql = "UPDATE vinokurov_applications SET 
+            $sql = "UPDATE my_applications SET 
                     full_name = ?, phone = ?, email = ?, birth_date = ?, gender = ?, bio = ?, agreement = ?
                     WHERE id = ?";
             $stmt = $pdo->prepare($sql);
@@ -87,16 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
                 $input['birth_date'], $input['gender'], $input['bio'],
                 $input['agreement'], $id
             ]);
-            // Обновление языков
-            $pdo->prepare("DELETE FROM vinokurov_application_languages WHERE application_id = ?")->execute([$id]);
-            $stmtLang = $pdo->prepare("INSERT INTO vinokurov_application_languages (application_id, language_id) VALUES (?, ?)");
+            $pdo->prepare("DELETE FROM my_application_languages WHERE application_id = ?")->execute([$id]);
+            $stmtLang = $pdo->prepare("INSERT INTO my_application_languages (application_id, language_id) VALUES (?, ?)");
             foreach ($input['languages'] as $lang_id) {
                 $stmtLang->execute([$id, $lang_id]);
             }
             $pdo->commit();
-            $message = "Анкета #$id обновлена.";
-            // Перенаправление, чтобы избежать повторной отправки
-            header("Location: admin.php?message=updated");
+            header('Location: admin.php?message=updated');
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -104,26 +122,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_application'])
         }
     } else {
         $message = "Ошибки валидации: " . implode(', ', $errors);
-        // В случае ошибки показываем форму заново с введёнными данными
         $edit_user = $input;
         $edit_user['id'] = $id;
         $edit_user['languages'] = $input['languages'];
     }
 }
 
-// Получение всех анкет (для списка)
-$applications = $pdo->query("SELECT * FROM vinokurov_applications ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-
-// Статистика по языкам
+// Получение списка анкет и статистики
+$applications = $pdo->query("SELECT * FROM my_applications ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 $lang_stats = $pdo->query("
     SELECT pl.language_name, COUNT(lal.application_id) as count
-    FROM vinokurov_programming_languages pl
-    LEFT JOIN vinokurov_application_languages lal ON pl.language_id = lal.language_id
+    FROM my_programming_languages pl
+    LEFT JOIN my_application_languages lal ON pl.language_id = lal.language_id
     GROUP BY pl.language_id
     ORDER BY count DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Сообщение из перенаправления
 if (isset($_GET['message']) && $_GET['message'] === 'updated') {
     $message = "Анкета обновлена.";
 }
@@ -147,14 +161,17 @@ if (isset($_GET['message']) && $_GET['message'] === 'updated') {
         label { font-weight: bold; display: block; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         select[multiple] { height: 120px; }
-        .error { color: red; }
         .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; background: #d4edda; color: #155724; }
         .stats { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        .logout-link { text-align: right; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1> Панель администратора</h1>
+    <div class="logout-link">
+        <a href="?logout=1" class="btn btn-danger">Выйти</a>
+    </div>
+    <h1>👑 Панель администратора</h1>
     <?php if ($message): ?>
         <div class="alert"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
@@ -181,9 +198,9 @@ if (isset($_GET['message']) && $_GET['message'] === 'updated') {
                 <td><?= htmlspecialchars($app['phone']) ?></td>
                 <td><?= htmlspecialchars($app['email']) ?></td>
                 <td>
-                    <a href="?action=edit&id=<?= $app['id'] ?>" class="btn btn-warning"> Редактировать</a>
-                    <a href="?action=delete&id=<?= $app['id'] ?>" class="btn btn-danger" onclick="return confirm('Удалить анкету?')"> Удалить</a>
-                 </td>
+                    <a href="?action=edit&id=<?= $app['id'] ?>" class="btn btn-warning">✏️ Редактировать</a>
+                    <a href="?action=delete&id=<?= $app['id'] ?>" class="btn btn-danger" onclick="return confirm('Удалить анкету?')">🗑️ Удалить</a>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
